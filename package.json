@@ -1,0 +1,28 @@
+{
+  "name": "moodroute-ai",
+  "version": "1.0.0",
+  "description": "MoodRoute AI - city walks and places by mood",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "mood",
+    "city-walks",
+    "openai",
+    "chatbot",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodRoute AI | Explore Moods</title>
+  <meta name="description" content="Explore curated city-walk moods and prefill MoodRoute AI chat in one click.">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/logo.svg">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/chat.js"></script>
+  <script defer src="/assets/app.js"></script>
+</head>
+<body data-page="explore">
+  <header class="site-header">
+    <div class="container header-inner">
+            <nav class="site-nav" aria-label="Main navigation">
+        <a href="/chat">Chat</a>
+        <a href="/profile" data-nav-profile>Profile</a>
+        <a href="/login" data-nav-login>Login</a>
+      </nav>
+      <div class="header-auth" data-auth-slot></div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="container chat-center-shell">
+      <p class="page-note">Quick presets.</p>
+      <div class="preset-row">
+        <button class="mood-pill" data-prefill="Quiet vibe, low crowds, rain-friendly, 90 minutes, Hamar.">Quiet</button>
+        <button class="mood-pill" data-prefill="Gothic vibe, old architecture, evening route, 2 hours, Oslo.">Gothic</button>
+        <button class="mood-pill" data-prefill="Energetic route, 75 minutes, lively streets, low budget, Bergen.">Energetic</button>
+        <button class="mood-pill" data-prefill="Cozy walk, light rain, coffee stop, low crowds, Hamar.">Cozy</button>
+        <button class="mood-pill" data-prefill="Weird route, unusual places, 2 hours, Tromso, flexible budget.">Weird</button>
+      </div>
+      <div id="chat-page-root" class="chat-page-root" aria-live="polite"></div>
+    </div>
+  </main>
+</body>
+</html>
+
+

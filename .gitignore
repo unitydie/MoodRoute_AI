@@ -1,0 +1,7 @@
+node_modules/
+data/moodroute.db
+data/moodroute.db-shm
+data/moodroute.db-wal
+npm-debug.log*
+.env
+public/uploads/

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">MoodRoute AI logo</title>
+  <desc id="desc">A rounded map pin with route line and mood spark.</desc>
+  <defs>
+    <linearGradient id="pinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f8a84"/>
+      <stop offset="100%" stop-color="#f08f43"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="#f8f6ee"/>
+  <path d="M60 16c-18.778 0-34 15.222-34 34 0 21.667 24.588 44.278 30.705 49.531a5 5 0 0 0 6.59 0C69.412 94.278 94 71.667 94 50c0-18.778-15.222-34-34-34z" fill="url(#pinGrad)"/>
+  <circle cx="60" cy="50" r="15" fill="#fff8ef"/>
+  <path d="M46 52c4-7 9-10 14-10s9 2 14 7" fill="none" stroke="#1f8a84" stroke-linecap="round" stroke-width="4"/>
+  <circle cx="80" cy="31" r="4" fill="#fff8ef"/>
+</svg>

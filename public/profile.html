@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodRoute AI | Profile</title>
+  <meta name="description" content="Manage your MoodRoute profile presets and visited places.">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/logo.svg">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/chat.js"></script>
+  <script defer src="/assets/app.js"></script>
+  <script defer src="/assets/profile.js"></script>
+</head>
+<body data-page="profile">
+  <header class="site-header">
+    <div class="container header-inner">
+            <nav class="site-nav" aria-label="Main navigation">
+        <a href="/chat">Chat</a>
+        <a href="/profile" data-nav-profile>Profile</a>
+        <a href="/login" data-nav-login>Login</a>
+      </nav>
+      <div class="header-auth" data-auth-slot></div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section section-top profile-page-section">
+      <div class="container profile-shell">
+        <div class="profile-layout">
+          <article class="profile-card profile-card-main profile-panel">
+            <p class="profile-kicker">Mood presets</p>
+            <h1>Profile</h1>
+            <form id="profile-form" class="profile-form">
+              <div class="profile-grid">
+                <label class="auth-label">
+                  Default city
+                  <input class="auth-input" type="text" name="default_city" maxlength="80" placeholder="Hamar">
+                </label>
+                <label class="auth-label">
+                  Default vibe
+                  <input class="auth-input" type="text" name="default_vibe" maxlength="50" placeholder="Cozy / Energetic / Quiet">
+                </label>
+                <label class="auth-label">
+                  Typical budget
+                  <input class="auth-input" type="text" name="default_budget" maxlength="50" placeholder="Under $20">
+                </label>
+                <label class="auth-label">
+                  Crowd tolerance
+                  <input class="auth-input" type="text" name="crowd_tolerance" maxlength="50" placeholder="Low crowds">
+                </label>
+                <label class="auth-label">
+                  Weather preference
+                  <input class="auth-input" type="text" name="weather_preference" maxlength="60" placeholder="Rain-friendly routes">
+                </label>
+                <label class="auth-label">
+                  Typical duration
+                  <input class="auth-input" type="text" name="default_duration" maxlength="60" placeholder="90 minutes">
+                </label>
+              </div>
+              <label class="auth-label">
+                Notes for assistant
+                <textarea class="auth-input auth-textarea" name="notes" rows="4" maxlength="800" placeholder="I like calm waterfront paths and one cafe stop."></textarea>
+              </label>
+              <button class="btn btn-accent profile-save-button" type="submit">Save Profile</button>
+            </form>
+          </article>
+
+          <aside class="profile-card profile-panel profile-panel--visited">
+            <p class="profile-kicker">Personal memory</p>
+            <h2>Visited Places</h2>
+            <form id="visited-form" class="profile-form">
+              <label class="auth-label">
+                Places list
+                <textarea class="auth-input auth-textarea" name="visited_places" rows="12" placeholder="Domkirkeodden&#10;Koigen&#10;Mjosa lakeside promenade"></textarea>
+              </label>
+              <button class="btn btn-outline profile-save-button profile-save-button--secondary" type="submit">Save Places</button>
+            </form>
+          </aside>
+        </div>
+        <p id="profile-status" class="auth-status profile-status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

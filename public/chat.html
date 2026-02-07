@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodRoute AI | Chat Planner</title>
+  <meta name="description" content="Full-screen MoodRoute AI planner with saved conversations and export.">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/logo.svg">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/chat.js"></script>
+  <script defer src="/assets/app.js"></script>
+</head>
+<body data-page="chat">
+  <header class="site-header">
+    <div class="container header-inner">
+            <nav class="site-nav" aria-label="Main navigation">
+        <a href="/chat">Chat</a>
+        <a href="/profile" data-nav-profile>Profile</a>
+        <a href="/login" data-nav-login>Login</a>
+      </nav>
+      <div class="header-auth" data-auth-slot></div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="container chat-center-shell">
+      <div id="chat-page-root" class="chat-page-root" aria-live="polite"></div>
+    </div>
+  </main>
+</body>
+</html>
+
+

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodRoute AI | Login</title>
+  <meta name="description" content="Sign in to MoodRoute AI to save city mood routes in your account.">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/logo.svg">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/chat.js"></script>
+  <script defer src="/assets/app.js"></script>
+  <script defer src="/assets/auth.js"></script>
+</head>
+<body data-page="login">
+  <main class="login-main">
+    <section class="ring" aria-label="Login and registration">
+      <i style="--clr:#21d4c7;"></i>
+      <i style="--clr:#5d8bff;"></i>
+      <i style="--clr:#ff8d63;"></i>
+
+      <div class="login-shell">
+        <h2 id="auth-mode-title">Login</h2>
+
+        <form id="login-form" class="login-form">
+          <div class="inputBx">
+            <input type="email" name="email" required autocomplete="email" placeholder="Email">
+          </div>
+          <div class="inputBx">
+            <input type="password" name="password" required autocomplete="current-password" placeholder="Password">
+          </div>
+          <div class="inputBx">
+            <input type="submit" value="Sign in">
+          </div>
+        </form>
+
+        <form id="register-form" class="login-form is-hidden">
+          <div class="inputBx">
+            <input type="text" name="username" maxlength="32" autocomplete="username" placeholder="Username (optional)">
+          </div>
+          <div class="inputBx">
+            <input type="email" name="email" required autocomplete="email" placeholder="Email">
+          </div>
+          <div class="inputBx">
+            <input type="password" name="password" minlength="8" required autocomplete="new-password" placeholder="Password (min 8)">
+          </div>
+          <div class="inputBx">
+            <input type="submit" value="Create account">
+          </div>
+        </form>
+
+        <a id="github-login-link" class="github-login-link" href="/api/auth/github/start?next=/chat">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38l-.01-1.34c-2.23.49-2.7-1.07-2.7-1.07-.37-.92-.9-1.16-.9-1.16-.73-.5.06-.49.06-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.5-1.08-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.58.82-2.14-.08-.2-.36-1.02.08-2.12 0 0 .67-.22 2.2.82a7.67 7.67 0 0 1 4 0c1.52-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.14 0 3.07-1.87 3.75-3.66 3.95.29.24.54.73.54 1.47l-.01 2.18c0 .21.14.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+          </svg>
+          <span>Continue with GitHub</span>
+        </a>
+
+        <div class="links">
+          <button type="button" data-auth-switch="login">Sign in</button>
+          <button type="button" data-auth-switch="register">Signup</button>
+        </div>
+
+        <p id="auth-status" class="auth-status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

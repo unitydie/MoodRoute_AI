@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoodRoute AI | City Walks by Mood</title>
+  <meta name="description" content="MoodRoute AI recommends city walks and places based on your mood, time, and constraints.">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/logo.svg">
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/chat.js"></script>
+  <script defer src="/assets/app.js"></script>
+</head>
+<body data-page="home">
+  <header class="site-header">
+    <div class="container header-inner">
+            <nav class="site-nav" aria-label="Main navigation">
+        <a href="/chat">Chat</a>
+        <a href="/profile" data-nav-profile>Profile</a>
+        <a href="/login" data-nav-login>Login</a>
+      </nav>
+      <div class="header-auth" data-auth-slot></div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <div class="container home-focus-layout">
+      <section class="home-title-block" aria-label="Site title">
+        <h1 class="home-title-scramble" data-home-title-scramble>MoodRoute</h1>
+      </section>
+
+      <section class="home-chat-line" aria-label="Quick chat line">
+        <form id="home-quick-chat-form" class="home-quick-chat-form">
+          <div class="mr-gemini-input">
+            <div class="mr-gemini-inner">
+              <span class="mr-gemini-side-icon" aria-hidden="true">+</span>
+              <input
+                id="home-quick-chat-input"
+                class="home-quick-chat-input mr-chat-input"
+                type="text"
+                maxlength="1200"
+                placeholder="Ask MoodRoute"
+                autocomplete="off"
+              >
+              <button class="mr-chat-send" type="submit" aria-label="Start chat"></button>
+            </div>
+            <div class="mr-gemini-border" aria-hidden="true"></div>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
+
+
