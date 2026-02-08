@@ -1,86 +1,171 @@
 const fs = require("fs/promises");
 const path = require("path");
-const sqlite3 = require("sqlite3");
-const { open } = require("sqlite");
+const { Pool } = require("pg");
 
-const DB_DIR = path.join(__dirname, "..", "data");
-const DB_PATH = path.join(DB_DIR, "moodroute.db");
 const INIT_SQL_PATH = path.join(__dirname, "init.sql");
+const DEFAULT_APP_NAME = "moodroute-ai";
 
 let dbPromise;
 
-async function initializeDatabase(db) {
-  const initSql = await fs.readFile(INIT_SQL_PATH, "utf8");
-  await db.exec("PRAGMA foreign_keys = ON;");
-  await db.exec(initSql);
-  await applyMigrations(db);
-}
+function buildPoolConfig() {
+  const connectionString =
+    process.env.DATABASE_URL ||
+    process.env.DATABASE_PUBLIC_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRESQL_URL;
 
-async function tableHasColumn(db, tableName, columnName) {
-  const rows = await db.all(`PRAGMA table_info(${tableName})`);
-  return rows.some((row) => row.name === columnName);
-}
+  if (connectionString) {
+    const requireSsl =
+      /sslmode=require/i.test(connectionString) ||
+      process.env.PGSSLMODE === "require";
 
-async function applyMigrations(db) {
-  const conversationsHasUserId = await tableHasColumn(
-    db,
-    "conversations",
-    "user_id"
-  );
-  if (!conversationsHasUserId) {
-    await db.exec("ALTER TABLE conversations ADD COLUMN user_id INTEGER;");
+    return {
+      connectionString,
+      ssl: requireSsl ? { rejectUnauthorized: false } : false,
+      application_name: process.env.PGAPPNAME || DEFAULT_APP_NAME
+    };
   }
 
-  const usersHasGithubAvatar = await tableHasColumn(
-    db,
-    "users",
-    "github_avatar_url"
-  );
-  if (!usersHasGithubAvatar) {
-    await db.exec("ALTER TABLE users ADD COLUMN github_avatar_url TEXT;");
-  }
+  const host = process.env.PGHOST;
+  const user = process.env.PGUSER;
+  const password = process.env.PGPASSWORD;
+  const database = process.env.PGDATABASE;
+  const port = Number(process.env.PGPORT || 5432);
+  const requireSsl = process.env.PGSSLMODE === "require";
 
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS user_profiles (
-      user_id INTEGER PRIMARY KEY,
-      default_city TEXT NOT NULL DEFAULT '',
-      default_vibe TEXT NOT NULL DEFAULT '',
-      default_budget TEXT NOT NULL DEFAULT '',
-      crowd_tolerance TEXT NOT NULL DEFAULT '',
-      weather_preference TEXT NOT NULL DEFAULT '',
-      default_duration TEXT NOT NULL DEFAULT '',
-      notes TEXT NOT NULL DEFAULT '',
-      visited_places_json TEXT NOT NULL DEFAULT '[]',
-      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-      updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  if (!host || !user || !database) {
+    throw new Error(
+      "Postgres is not configured. Set DATABASE_URL (Railway) or PGHOST/PGUSER/PGDATABASE."
     );
-  `);
+  }
 
-  await db.exec(
-    "CREATE INDEX IF NOT EXISTS idx_conversations_user_updated_at ON conversations(user_id, updated_at DESC);"
-  );
-  await db.exec(
-    "CREATE INDEX IF NOT EXISTS idx_user_profiles_updated_at ON user_profiles(updated_at DESC);"
-  );
+  return {
+    host,
+    user,
+    password,
+    database,
+    port,
+    ssl: requireSsl ? { rejectUnauthorized: false } : false,
+    application_name: process.env.PGAPPNAME || DEFAULT_APP_NAME
+  };
+}
+
+function toPgParams(sql, params = []) {
+  let placeholderIndex = 0;
+  let inSingleQuote = false;
+  let text = "";
+
+  for (let i = 0; i < sql.length; i += 1) {
+    const char = sql[i];
+
+    if (char === "'") {
+      if (inSingleQuote && sql[i + 1] === "'") {
+        text += "''";
+        i += 1;
+        continue;
+      }
+      inSingleQuote = !inSingleQuote;
+      text += char;
+      continue;
+    }
+
+    if (!inSingleQuote && char === "?") {
+      placeholderIndex += 1;
+      text += `$${placeholderIndex}`;
+      continue;
+    }
+
+    text += char;
+  }
+
+  return { text, values: params };
+}
+
+function extractLastId(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return null;
+  }
+
+  const first = rows[0];
+  if (!first || first.id === undefined || first.id === null) {
+    return null;
+  }
+
+  const numeric = Number(first.id);
+  return Number.isFinite(numeric) ? numeric : first.id;
+}
+
+class PgCompatDatabase {
+  constructor(pool) {
+    this.pool = pool;
+  }
+
+  async get(sql, params = []) {
+    const { text, values } = toPgParams(sql, params);
+    const result = await this.pool.query(text, values);
+    return result.rows[0] || undefined;
+  }
+
+  async all(sql, params = []) {
+    const { text, values } = toPgParams(sql, params);
+    const result = await this.pool.query(text, values);
+    return result.rows;
+  }
+
+  async run(sql, params = []) {
+    const { text, values } = toPgParams(sql, params);
+    const result = await this.pool.query(text, values);
+    return {
+      lastID: extractLastId(result.rows),
+      changes: result.rowCount || 0
+    };
+  }
+
+  async exec(sql) {
+    await this.pool.query(sql);
+  }
+}
+
+async function initializeDatabase(pool) {
+  const initSql = await fs.readFile(INIT_SQL_PATH, "utf8");
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(initSql);
+    await client.query("COMMIT");
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      // no-op
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function createDatabaseClient() {
+  const pool = new Pool(buildPoolConfig());
+  pool.on("error", (error) => {
+    console.error("[db:pool]", error.message);
+  });
+
+  await pool.query("SELECT 1");
+  await initializeDatabase(pool);
+  return new PgCompatDatabase(pool);
 }
 
 async function getDb() {
   if (!dbPromise) {
-    dbPromise = (async () => {
-      await fs.mkdir(DB_DIR, { recursive: true });
-      const db = await open({
-        filename: DB_PATH,
-        driver: sqlite3.Database
-      });
-      await initializeDatabase(db);
-      return db;
-    })();
+    dbPromise = createDatabaseClient().catch((error) => {
+      dbPromise = undefined;
+      throw error;
+    });
   }
   return dbPromise;
 }
 
 module.exports = {
-  getDb,
-  DB_PATH
+  getDb
 };

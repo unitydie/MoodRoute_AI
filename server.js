@@ -470,7 +470,7 @@ async function makeUniqueUsername(db, preferred) {
     const suffix = attempt === 0 ? "" : `_${attempt}`;
     const candidate = `${base}${suffix}`.slice(0, 32);
     const exists = await db.get(
-      "SELECT id FROM users WHERE username = ? COLLATE NOCASE",
+      "SELECT id FROM users WHERE LOWER(username) = LOWER(?)",
       [candidate]
     );
     if (!exists) {
@@ -1647,7 +1647,7 @@ app.post("/api/auth/register", async (req, res) => {
   try {
     const db = await getDb();
     const existingEmail = await db.get(
-      "SELECT id FROM users WHERE email = ? COLLATE NOCASE",
+      "SELECT id FROM users WHERE LOWER(email) = LOWER(?)",
       [email]
     );
     if (existingEmail) {
@@ -1663,6 +1663,7 @@ app.post("/api/auth/register", async (req, res) => {
       `
       INSERT INTO users (email, username, password_hash, github_id, github_avatar_url, created_at, updated_at)
       VALUES (?, ?, ?, NULL, '', ?, ?)
+      RETURNING id
       `,
       [email, username, passwordHash, createdAt, createdAt]
     );
@@ -1698,7 +1699,7 @@ app.post("/api/auth/login", async (req, res) => {
       `
       SELECT id, email, username, password_hash, github_id, github_avatar_url, created_at
       FROM users
-      WHERE email = ? COLLATE NOCASE
+      WHERE LOWER(email) = LOWER(?)
       `,
       [email]
     );
@@ -1841,7 +1842,7 @@ app.get("/api/auth/github/callback", async (req, res) => {
 
     if (!user && githubEmail) {
       const existingByEmail = await db.get(
-        "SELECT id FROM users WHERE email = ? COLLATE NOCASE",
+        "SELECT id FROM users WHERE LOWER(email) = LOWER(?)",
         [githubEmail]
       );
       if (existingByEmail) {
@@ -1864,6 +1865,7 @@ app.get("/api/auth/github/callback", async (req, res) => {
         `
         INSERT INTO users (email, username, password_hash, github_id, github_avatar_url, created_at, updated_at)
         VALUES (?, ?, NULL, ?, ?, ?, ?)
+        RETURNING id
         `,
         [emailForStorage, username, githubId, githubAvatarUrl, createdAt, createdAt]
       );
@@ -1943,7 +1945,7 @@ app.get("/api/conversations", requireAuth, async (req, res) => {
         ), '') AS last_message
       FROM conversations c
       WHERE c.user_id = ?
-      ORDER BY datetime(c.updated_at) DESC, c.id DESC
+      ORDER BY c.updated_at DESC, c.id DESC
       `,
       [req.user.id]
     );
@@ -1961,7 +1963,7 @@ app.post("/api/conversations", requireAuth, async (req, res) => {
   try {
     const db = await getDb();
     const result = await db.run(
-      "INSERT INTO conversations (user_id, title) VALUES (?, ?)",
+      "INSERT INTO conversations (user_id, title) VALUES (?, ?) RETURNING id",
       [req.user.id, title]
     );
     const conversation = await db.get(
@@ -2037,16 +2039,16 @@ app.post("/api/conversations/:id/messages", requireAuth, async (req, res) => {
     }
 
     const existingCountRow = await db.get(
-      "SELECT COUNT(*) AS count FROM messages WHERE conversation_id = ?",
+      "SELECT COUNT(*)::int AS count FROM messages WHERE conversation_id = ?",
       [conversationId]
     );
 
     const userInsert = await db.run(
-      "INSERT INTO messages (conversation_id, role, content) VALUES (?, 'user', ?)",
+      "INSERT INTO messages (conversation_id, role, content) VALUES (?, 'user', ?) RETURNING id",
       [conversationId, userMessage]
     );
     const assistantInsert = await db.run(
-      "INSERT INTO messages (conversation_id, role, content) VALUES (?, 'assistant', ?)",
+      "INSERT INTO messages (conversation_id, role, content) VALUES (?, 'assistant', ?) RETURNING id",
       [conversationId, assistantMessage]
     );
 
@@ -2058,7 +2060,7 @@ app.post("/api/conversations/:id/messages", requireAuth, async (req, res) => {
     }
 
     await db.run(
-      "UPDATE conversations SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?",
+      "UPDATE conversations SET updated_at = NOW() WHERE id = ?",
       [conversationId]
     );
 
@@ -2094,7 +2096,7 @@ app.post("/api/conversations/:id/clear", requireAuth, async (req, res) => {
 
     await db.run("DELETE FROM messages WHERE conversation_id = ?", [conversationId]);
     await db.run(
-      "UPDATE conversations SET updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE id = ?",
+      "UPDATE conversations SET updated_at = NOW() WHERE id = ?",
       [conversationId]
     );
     return res.json({ cleared: true });

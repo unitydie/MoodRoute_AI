@@ -9,7 +9,7 @@ MoodRoute AI is a web app that recommends city walks and places by mood.
 - Full website shell: `Home`, `Explore`, `About`, `Chat`, `Login`
 - Profile page: presets + visited places (`/profile`)
 - Floating bottom-right chat widget + dedicated full chat page
-- SQLite persistence for conversations/messages
+- PostgreSQL persistence for conversations/messages
 - Account-based storage (users only see their own chats)
 - Auth:
   - local email/password registration + login
@@ -23,7 +23,7 @@ MoodRoute AI is a web app that recommends city walks and places by mood.
 
 - Backend: Node.js + Express
 - AI: OpenAI Chat Completions API
-- Database: SQLite (`sqlite3` + `sqlite`)
+- Database: PostgreSQL (`pg`)
 - Frontend: Vanilla HTML/CSS/JS
 
 ## Project Structure
@@ -36,8 +36,6 @@ MoodRoute AI is a web app that recommends city walks and places by mood.
 |- db/
 |  |- database.js
 |  |- init.sql
-|- data/
-|  |- .gitkeep
 |- public/
 |  |- index.html
 |  |- explore.html
@@ -67,20 +65,11 @@ MoodRoute AI is a web app that recommends city walks and places by mood.
 npm install
 ```
 
-2. Run:
-
-```bash
-npm run dev
-```
-
-3. Open:
-
-`http://localhost:3000`
-
-## Environment Variables
+2. Configure env (`.env`):
 
 ```env
 PORT=3000
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/moodroute_ai
 OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-4.1-mini
 RATE_LIMIT_MAX=45
@@ -91,7 +80,50 @@ GITHUB_CLIENT_SECRET=...
 GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
 ```
 
+3. Run:
+
+```bash
+npm run dev
+```
+
+4. Open:
+
+`http://localhost:3000`
+
+## Environment Variables
+
+```env
+PORT=3000
+DATABASE_URL=postgresql://...
+OPENAI_API_KEY=...
+OPENAI_MODEL=gpt-4.1-mini
+RATE_LIMIT_MAX=45
+MAX_MESSAGE_LENGTH=1200
+SESSION_TTL_DAYS=14
+PGSSLMODE=disable
+GITHUB_CLIENT_ID=...
+GITHUB_CLIENT_SECRET=...
+GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
+```
+
 If OpenAI is unavailable (missing/invalid key or API error), backend falls back to deterministic mock mode.
+
+## Railway Postgres
+
+1. Add a PostgreSQL service in Railway.
+2. In your app service variables, set:
+   - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
+3. Redeploy the app.
+4. Open Railway Postgres `Data` tab and run:
+
+```sql
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
+```
+
+If the list contains `users`, `sessions`, `conversations`, `messages`, `user_profiles`, then migrations are applied.
 
 ## GitHub OAuth Notes
 

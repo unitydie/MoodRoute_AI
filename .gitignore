@@ -1,7 +1,7 @@
 node_modules/
-data/moodroute.db
-data/moodroute.db-shm
-data/moodroute.db-wal
+data/*.db
+data/*.db-shm
+data/*.db-wal
 npm-debug.log*
 .env
 public/uploads/
