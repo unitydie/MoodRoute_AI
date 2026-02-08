@@ -1,159 +1,34 @@
-# MoodRoute AI
+Nettside: https://moodrouteai-production.up.railway.app/
 
-MoodRoute AI is a web app that recommends city walks and places by mood.
+# MoodRoute AI - Kort teknisk dokumentasjon
 
-## Features
+## Hvordan fungerer lagringen?
+Prosjektet bruker PostgreSQL i Railway. Ved oppstart kjorer backend `db/init.sql` og oppretter tabeller hvis de ikke finnes:
+- `users` (kontoer)
+- `sessions` (innloggingssesjoner)
+- `conversations` (chat-prosjekter per bruker)
+- `messages` (meldinger i hver samtale)
+- `user_profiles` (presetter og besokte steder)
 
-- AI chat endpoint with OpenAI integration and mock fallback
-- Norway city grounding (Hamar + other Norwegian cities) with POI anchors
-- Full website shell: `Home`, `Explore`, `About`, `Chat`, `Login`
-- Profile page: presets + visited places (`/profile`)
-- Floating bottom-right chat widget + dedicated full chat page
-- PostgreSQL persistence for conversations/messages
-- Account-based storage (users only see their own chats)
-- Auth:
-  - local email/password registration + login
-  - GitHub OAuth login
-- Header avatar:
-  - GitHub avatar when authorized via GitHub
-  - fallback circle avatar for local accounts
-- Conversation restore on reload, clear chat, JSON export
+Data er knyttet til bruker-ID, sa hver bruker ser kun egne samtaler.  
+Historikk hentes ved sideoppdatering via API og vises i chat-sidebaren.  
+Nar en chat slettes/cleares, fjernes meldinger i databasen for den samtalen.
 
-## Tech Stack
+## Hvordan kobles frontend <-> backend?
+Frontend er laget i vanilla HTML/CSS/JS (`public/assets/*.js`) og snakker med Express-backend via `fetch` mot `/api/*`.
 
-- Backend: Node.js + Express
-- AI: OpenAI Chat Completions API
-- Database: PostgreSQL (`pg`)
-- Frontend: Vanilla HTML/CSS/JS
+Hovedflyt:
+1. Frontend sender brukertekst (og eventuelt bilde-URL fra opplasting) til `POST /api/chat`.
+2. Backend bygger prompt med systeminstruksjoner + brukerhistorikk + (om mulig) bykontekst.
+3. Backend kaller OpenAI naar `OPENAI_API_KEY` finnes, ellers mock-modus.
+4. Svaret lagres gjennom `POST /api/conversations/:id/messages`.
+5. Frontend oppdaterer meldingslisten og samtalelisten fra API.
 
-## Project Structure
+Autentisering skjer med HttpOnly-cookie og API-endepunkter for login/register/GitHub OAuth.
 
-```text
-.
-|- config/
-|  |- botConfig.js
-|  |- norwayCityKnowledge.js
-|- db/
-|  |- database.js
-|  |- init.sql
-|- public/
-|  |- index.html
-|  |- explore.html
-|  |- about.html
-|  |- chat.html
-|  |- login.html
-|  |- profile.html
-|  |- assets/
-|  |  |- style.css
-|  |  |- app.js
-|  |  |- chat.js
-|  |  |- auth.js
-|  |  |- profile.js
-|  |  |- icons/logo.svg
-|- .env
-|- .env.example
-|- server.js
-|- REFLECTION.md
-|- package.json
-```
-
-## Setup
-
-1. Install dependencies:
-
-```bash
-npm install
-```
-
-2. Configure env (`.env`):
-
-```env
-PORT=3000
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/moodroute_ai
-OPENAI_API_KEY=...
-OPENAI_MODEL=gpt-4.1-mini
-RATE_LIMIT_MAX=45
-MAX_MESSAGE_LENGTH=1200
-SESSION_TTL_DAYS=14
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
-```
-
-3. Run:
-
-```bash
-npm run dev
-```
-
-4. Open:
-
-`http://localhost:3000`
-
-## Environment Variables
-
-```env
-PORT=3000
-DATABASE_URL=postgresql://...
-OPENAI_API_KEY=...
-OPENAI_MODEL=gpt-4.1-mini
-RATE_LIMIT_MAX=45
-MAX_MESSAGE_LENGTH=1200
-SESSION_TTL_DAYS=14
-PGSSLMODE=disable
-GITHUB_CLIENT_ID=...
-GITHUB_CLIENT_SECRET=...
-GITHUB_CALLBACK_URL=http://localhost:3000/api/auth/github/callback
-```
-
-If OpenAI is unavailable (missing/invalid key or API error), backend falls back to deterministic mock mode.
-
-## Railway Postgres
-
-1. Add a PostgreSQL service in Railway.
-2. In your app service variables, set:
-   - `DATABASE_URL=${{Postgres.DATABASE_URL}}`
-3. Redeploy the app.
-4. Open Railway Postgres `Data` tab and run:
-
-```sql
-SELECT table_name
-FROM information_schema.tables
-WHERE table_schema = 'public'
-ORDER BY table_name;
-```
-
-If the list contains `users`, `sessions`, `conversations`, `messages`, `user_profiles`, then migrations are applied.
-
-## GitHub OAuth Notes
-
-- In GitHub OAuth App settings, callback URL must match:
-  - `http://localhost:3000/api/auth/github/callback`
-- Start URL used by frontend:
-  - `/api/auth/github/start?next=/chat`
-
-## API Endpoints
-
-- `GET /api/meta`
-- `GET /api/auth/me`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/profile` (auth required)
-- `PUT /api/profile` (auth required)
-- `GET /api/auth/github/start`
-- `GET /api/auth/github/callback`
-- `POST /api/chat` (auth required)
-- `GET /api/conversations` (auth required)
-- `POST /api/conversations` (auth required)
-- `GET /api/conversations/:id/messages` (auth required)
-- `POST /api/conversations/:id/messages` (auth required)
-- `POST /api/conversations/:id/clear` (auth required)
-- `DELETE /api/conversations/:id` (auth required)
-
-## Security Notes
-
-- OpenAI key stays on backend.
-- Sessions use HttpOnly cookie.
-- Passwords are stored as salted `scrypt` hashes.
-- Simple per-IP rate limiting is enabled on API routes.
+## Hva ville du gjort hvis du hadde mer tid?
+1. Legge til ordentlige migrasjoner (for eksempel med versjonstabell og rollback-stotte).
+2. Forbedre observability: strukturert logging, metrics, og tydelig feildiagnose i UI.
+3. Bedre testdekning (API-integrasjonstester for auth, chat, lagring og filopplasting).
+4. Utvide bykunnskap med dynamiske kilder (kart/POI-API) i tillegg til statisk kunnskapsfil.
+5. Legge til rollebasert admin-side for enkel visning av databaseinnhold i appen.
