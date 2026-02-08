@@ -42,6 +42,8 @@ const IMAGE_EXTENSION_TO_MIME = {
   ".webp": "image/webp",
   ".gif": "image/gif"
 };
+const CORE_TASK_FOLLOW_UP_LINE =
+  "MoodRoute follow-up: share city + time + vibe, and I will build 3 city options for you.";
 
 const ipCounters = new Map();
 const oauthStateStore = new Map();
@@ -1239,7 +1241,27 @@ function stripRawUrlsFromReply(reply) {
 }
 
 function appendCoreTaskInvite(text) {
-  return `${text}\n\nMoodRoute follow-up: share city + time + vibe, and I will build 3 city options for you.`;
+  const base = normalizeText(text || "");
+  if (!base) {
+    return CORE_TASK_FOLLOW_UP_LINE;
+  }
+  return `${base}\n\n${CORE_TASK_FOLLOW_UP_LINE}`;
+}
+
+function ensureCoreTaskInvite(text) {
+  const base = normalizeText(text || "");
+  if (!base) {
+    return CORE_TASK_FOLLOW_UP_LINE;
+  }
+  if (/moodroute\s*follow-up\s*:/i.test(base)) {
+    return base;
+  }
+
+  const safeLimit = MAX_MESSAGE_LENGTH * 3;
+  const suffix = `\n\n${CORE_TASK_FOLLOW_UP_LINE}`;
+  const maxBaseLength = Math.max(0, safeLimit - suffix.length);
+  const clippedBase = base.length > maxBaseLength ? base.slice(0, maxBaseLength).trim() : base;
+  return `${clippedBase}${suffix}`;
 }
 
 function isLikelyRouteIntent(message) {
@@ -1409,6 +1431,115 @@ async function buildOpenAIImageParts(attachments) {
   return parts;
 }
 
+function extractChatCompletionText(data) {
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content === "string") {
+    return content.trim();
+  }
+
+  if (Array.isArray(content)) {
+    const combined = content
+      .map((item) => {
+        if (typeof item === "string") {
+          return item;
+        }
+        if (typeof item?.text === "string") {
+          return item.text;
+        }
+        return "";
+      })
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+    return combined;
+  }
+
+  return "";
+}
+
+function extractResponsesText(data) {
+  if (typeof data?.output_text === "string" && data.output_text.trim()) {
+    return data.output_text.trim();
+  }
+
+  if (!Array.isArray(data?.output)) {
+    return "";
+  }
+
+  const parts = [];
+  for (const outputItem of data.output) {
+    if (outputItem?.type !== "message" || !Array.isArray(outputItem.content)) {
+      continue;
+    }
+
+    for (const contentItem of outputItem.content) {
+      if (typeof contentItem?.text === "string" && contentItem.text.trim()) {
+        parts.push(contentItem.text.trim());
+      }
+    }
+  }
+
+  return parts.join("\n\n").trim();
+}
+
+async function fetchOpenAIReplyViaResponsesApi({
+  userMessage,
+  historyMessages,
+  cityPrompt,
+  profilePrompt,
+  imageParts
+}) {
+  const userContent = [{ type: "input_text", text: userMessage }];
+  for (const part of imageParts) {
+    if (part?.image_url?.url) {
+      userContent.push({
+        type: "input_image",
+        image_url: part.image_url.url
+      });
+    }
+  }
+
+  const payload = {
+    model: OPENAI_MODEL,
+    temperature: 0.7,
+    max_output_tokens: 650,
+    instructions: [SYSTEM_PROMPT, DEVELOPER_PROMPT, cityPrompt, profilePrompt]
+      .filter(Boolean)
+      .join("\n\n"),
+    input: [
+      ...historyMessages.map((item) => ({
+        role: item.role === "assistant" ? "assistant" : "user",
+        content: [{ type: "input_text", text: item.content }]
+      })),
+      {
+        role: "user",
+        content: userContent
+      }
+    ]
+  };
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const rawError = await response.text();
+    throw new Error(`OpenAI responses error ${response.status}: ${rawError.slice(0, 400)}`);
+  }
+
+  const data = await response.json();
+  const text = extractResponsesText(data);
+  if (!text) {
+    throw new Error("OpenAI responses API did not include text content.");
+  }
+  return text;
+}
+
 async function fetchOpenAIReply(
   userMessage,
   historyMessages,
@@ -1443,27 +1574,45 @@ async function fetchOpenAIReply(
     ]
   };
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify(payload)
+    });
 
-  if (!response.ok) {
-    const rawError = await response.text();
-    throw new Error(`OpenAI error ${response.status}: ${rawError.slice(0, 400)}`);
+    if (!response.ok) {
+      const rawError = await response.text();
+      throw new Error(`OpenAI chat/completions error ${response.status}: ${rawError.slice(0, 400)}`);
+    }
+
+    const data = await response.json();
+    const text = extractChatCompletionText(data);
+    if (!text) {
+      throw new Error("OpenAI chat/completions did not include text content.");
+    }
+    return text;
+  } catch (chatError) {
+    if (!imageParts.length) {
+      throw chatError;
+    }
+
+    console.warn(
+      "[chat:openai] chat/completions failed with image input, falling back to /v1/responses:",
+      chatError.message
+    );
+
+    return fetchOpenAIReplyViaResponsesApi({
+      userMessage,
+      historyMessages,
+      cityPrompt,
+      profilePrompt,
+      imageParts
+    });
   }
-
-  const data = await response.json();
-  const text = data?.choices?.[0]?.message?.content;
-  if (!text || typeof text !== "string") {
-    throw new Error("OpenAI response did not include text content.");
-  }
-
-  return text.trim();
 }
 
 async function createAssistantReply({
@@ -2203,9 +2352,10 @@ app.post("/api/chat", requireAuth, async (req, res) => {
       normalizedAssistantReply,
       mapsSuggestions
     );
+    const finalReply = ensureCoreTaskInvite(replyWithMaps);
 
     return res.json({
-      reply: replyWithMaps,
+      reply: finalReply,
       mode: assistant.mode,
       personality: BOT_PERSONALITY.name
     });
