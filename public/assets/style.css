@@ -2426,4 +2426,363 @@ body[data-page="profile"] .profile-status.is-error {
   }
 }
 
+/* Mobile-first refinements */
+@media (max-width: 900px) {
+  .container {
+    width: calc(100% - 1.25rem);
+  }
+
+  .app-main {
+    align-items: flex-start;
+    padding: 0.65rem 0 1rem;
+  }
+
+  .header-inner {
+    justify-content: space-between;
+    gap: 0.55rem;
+  }
+
+  .site-nav {
+    gap: 0.7rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .site-nav a {
+    white-space: nowrap;
+    font-size: 0.96rem;
+  }
+
+  .header-auth {
+    gap: 0.35rem;
+  }
+
+  .header-profile-link {
+    padding: 0.22rem 0.46rem 0.22rem 0.22rem;
+  }
+
+  .home-focus-layout {
+    width: 100%;
+    gap: 1.05rem;
+  }
+
+  .home-title-block h1 {
+    font-size: clamp(2.2rem, 11vw, 3.6rem);
+  }
+
+  body[data-page="chat"] .app-main {
+    padding: 0.2rem 0 0.45rem;
+  }
+
+  .chat-center-shell {
+    max-width: none;
+    gap: 0.45rem;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .chat-page-root {
+    min-height: 0;
+  }
+
+  .mr-chat-shell--page {
+    grid-template-columns: 1fr;
+    border-radius: 14px;
+  }
+
+  .mr-chat-sidebar {
+    min-height: auto;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid rgba(159, 181, 203, 0.24);
+  }
+
+  .mr-chat-sidebar-top {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .mr-chat-conversation-list {
+    padding: 0.55rem 0.62rem 0.7rem;
+    flex-direction: row;
+    gap: 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+  }
+
+  .mr-conversation-item {
+    flex: 0 0 220px;
+    min-width: 220px;
+    scroll-snap-align: start;
+  }
+
+  .mr-chat-main {
+    min-height: 0;
+  }
+
+  .mr-chat-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0.66rem 0.72rem;
+  }
+
+  .mr-chat-title {
+    font-size: 1rem;
+  }
+
+  .mr-chat-meta {
+    font-size: 0.74rem;
+  }
+
+  .mr-chat-top-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.4rem;
+    padding-bottom: 0.12rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mr-chat-shell--page .mr-conversation-select {
+    display: inline-block;
+  }
+
+  .mr-chat-top-actions .chip-button,
+  .mr-chat-top-actions .mr-conversation-select {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .mr-chat-messages {
+    padding: 0.62rem 0.68rem 0.88rem;
+    gap: 0.5rem;
+  }
+
+  .mr-message {
+    max-width: 100%;
+  }
+
+  .mr-chat-form {
+    padding: 0.6rem 0.65rem calc(0.6rem + env(safe-area-inset-bottom));
+  }
+
+  .mr-gemini-inner {
+    padding: 0.44rem 0.52rem;
+    gap: 0.42rem;
+  }
+
+  .mr-chat-input,
+  .auth-input,
+  body[data-page="login"] .inputBx input {
+    font-size: 16px;
+  }
+
+  .mr-inline-image img {
+    width: min(230px, 100%);
+  }
+
+  body[data-page="profile"] .profile-shell {
+    width: calc(100% - 1.2rem);
+  }
+
+  body[data-page="profile"] .profile-panel {
+    padding: 0.95rem;
+  }
+
+  body[data-page="profile"] [name="visited_places"] {
+    min-height: 180px;
+  }
+
+  body[data-page="login"] {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  body[data-page="login"] .login-main {
+    align-items: flex-start;
+    padding: 1.25rem 0.65rem calc(1.4rem + env(safe-area-inset-bottom));
+  }
+
+  body[data-page="login"] .ring {
+    width: min(360px, 92vw);
+    height: min(360px, 92vw);
+  }
+
+  body[data-page="login"] .login-shell {
+    width: min(300px, 88vw);
+  }
+
+  body[data-page="login"] .login-shell h2 {
+    font-size: 1.65rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: calc(100% - 0.9rem);
+  }
+
+  .header-inner {
+    min-height: 56px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.3rem;
+    padding: 0.45rem 0 0.2rem;
+  }
+
+  .site-nav {
+    order: 1;
+    justify-content: flex-start;
+    gap: 0.85rem;
+    padding-bottom: 0.08rem;
+  }
+
+  .site-nav a {
+    font-size: 0.92rem;
+  }
+
+  .header-auth {
+    order: 2;
+    justify-content: flex-end;
+  }
+
+  .header-profile-name {
+    display: none;
+  }
+
+  .header-profile-link {
+    padding: 0.2rem;
+    min-width: 34px;
+  }
+
+  button[data-header-logout] {
+    padding: 0.4rem 0.72rem;
+    font-size: 0.82rem;
+  }
+
+  .home-title-block h1 {
+    font-size: clamp(1.95rem, 14vw, 3.1rem);
+  }
+
+  .mr-conversation-item {
+    flex-basis: 192px;
+    min-width: 192px;
+  }
+
+  .mr-chat-top-actions .chip-button {
+    font-size: 0.74rem;
+    padding: 0.35rem 0.58rem;
+  }
+
+  .mr-conversation-select {
+    min-width: 132px;
+    font-size: 0.76rem;
+    padding: 0.38rem 0.52rem;
+  }
+
+  .mr-chat-messages {
+    padding: 0.55rem 0.52rem 0.76rem;
+  }
+
+  .mr-message-bubble {
+    padding: 0.42rem 0.5rem;
+  }
+
+  .mr-gemini-input {
+    --mr-border-size: 2px;
+  }
+
+  .mr-gemini-border::after {
+    filter: blur(10px);
+  }
+
+  .mr-attachment-pill {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 12px;
+  }
+
+  .mr-attachment-name {
+    max-width: 62vw;
+  }
+
+  body[data-page="profile"] .profile-kicker {
+    font-size: 0.68rem;
+  }
+
+  body[data-page="profile"] .auth-label {
+    font-size: 0.9rem;
+  }
+
+  body[data-page="profile"] .auth-input {
+    padding: 0.62rem 0.68rem;
+  }
+
+  body[data-page="profile"] [name="visited_places"] {
+    min-height: 145px;
+  }
+
+  body[data-page="login"] .ring {
+    width: min(332px, 94vw);
+    height: min(332px, 94vw);
+  }
+
+  body[data-page="login"] .ring i {
+    border-width: 1.6px;
+  }
+
+  body[data-page="login"] .inputBx input {
+    padding: 10px 16px;
+  }
+
+  body[data-page="login"] .links {
+    gap: 0.35rem;
+  }
+
+  body[data-page="login"] .links button {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-nav a {
+    font-size: 0.88rem;
+  }
+
+  .mr-conversation-item {
+    flex-basis: 170px;
+    min-width: 170px;
+  }
+
+  .mr-chat-title {
+    font-size: 0.93rem;
+  }
+
+  .mr-chat-meta,
+  .mr-notice,
+  .mr-message-time {
+    font-size: 0.68rem;
+  }
+
+  .mr-gemini-side-icon,
+  .mr-chat-send {
+    width: 32px;
+    height: 32px;
+  }
+
+  .home-title-block h1 {
+    font-size: clamp(1.8rem, 16vw, 2.7rem);
+  }
+
+  body[data-page="login"] .ring {
+    width: min(308px, 96vw);
+    height: min(308px, 96vw);
+  }
+
+  body[data-page="login"] .login-shell h2 {
+    font-size: 1.45rem;
+  }
+}
+
 
